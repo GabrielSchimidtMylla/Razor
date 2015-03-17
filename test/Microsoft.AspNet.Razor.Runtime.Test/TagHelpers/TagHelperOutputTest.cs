@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.AspNet.Razor.Runtime.TagHelpers.Test;
 using Xunit;
 
@@ -41,14 +42,13 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 {
                     { "class", "btn" },
                     { "something", "   spaced    " }
-                },
-                htmlEncoder: new NullHtmlEncoder());
+                });
 
             // Act
             var output = tagHelperOutput.GenerateStartTag();
 
             // Assert
-            Assert.Equal("<p class=\"btn\" something=\"   spaced    \">", output);
+            Assert.Equal("<p class=\"btn\" something=\"   spaced    \">", output.ToString());
         }
 
         [Fact]
@@ -61,7 +61,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var output = tagHelperOutput.GenerateStartTag();
 
             // Assert
-            Assert.Equal("<p>", output);
+            Assert.Equal("<p>", output.ToString());
         }
 
         [Fact]
@@ -73,8 +73,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 {
                     { "class", "btn" },
                     { "something", "   spaced    " }
-                },
-                htmlEncoder: new NullHtmlEncoder());
+                });
 
             tagHelperOutput.SelfClosing = true;
 
@@ -82,7 +81,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var output = tagHelperOutput.GenerateStartTag();
 
             // Assert
-            Assert.Equal("<p class=\"btn\" something=\"   spaced    \" />", output);
+            Assert.Equal("<p class=\"btn\" something=\"   spaced    \" />", output.ToString());
         }
 
         [Fact]
@@ -97,7 +96,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var output = tagHelperOutput.GenerateStartTag();
 
             // Assert
-            Assert.Equal("<p />", output);
+            Assert.Equal("<p />", output.ToString());
         }
 
         [Fact]
@@ -108,16 +107,18 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 attributes: new Dictionary<string, string>
                 {
                     { "hello", "world" },
-                },
-                htmlEncoder: new PseudoHtmlEncoder());
+                });
 
             tagHelperOutput.SelfClosing = true;
 
             // Act
             var output = tagHelperOutput.GenerateStartTag();
 
+            var writer = new StringWriter();
+            output.WriteTo(writer, new PseudoHtmlEncoder());
+
             // Assert
-            Assert.Equal("<p hello=\"HtmlEncode[[world]]\" />", output);
+            Assert.Equal("<p hello=\"HtmlEncode[[world]]\" />", writer.ToString());
         }
 
         [Fact]
@@ -129,8 +130,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 {
                     { "class", "btn" },
                     { "something", "   spaced    " }
-                },
-                htmlEncoder: new NullHtmlEncoder())
+                })
             {
                 SelfClosing = true
             };
@@ -139,7 +139,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var output = tagHelperOutput.GenerateStartTag();
 
             // Assert
-            Assert.Empty(output);
+            Assert.Empty(output.ToString());
         }
 
 
@@ -154,7 +154,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var output = tagHelperOutput.GenerateEndTag();
 
             // Assert
-            Assert.Empty(output);
+            Assert.Empty(output.ToString());
         }
 
         [Fact]
@@ -312,7 +312,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var output = tagHelperOutput.GenerateEndTag();
 
             // Assert
-            Assert.Equal("</p>", output);
+            Assert.Equal("</p>", output.ToString());
         }
 
         [Theory]
@@ -352,7 +352,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var output = tagHelperOutput.GenerateEndTag();
 
             // Assert
-            Assert.Empty(output);
+            Assert.Empty(output.ToString());
         }
 
         [Fact]
@@ -386,8 +386,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 {
                     { "class", "btn" },
                     { "something", "   spaced    " }
-                },
-                htmlEncoder: new NullHtmlEncoder());
+                });
             tagHelperOutput.PreContent.Append("Pre Content");
             tagHelperOutput.Content.Append("Content");
             tagHelperOutput.PostContent.Append("Post Content");
@@ -396,14 +395,14 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             tagHelperOutput.SuppressOutput();
 
             // Assert
-            Assert.Empty(tagHelperOutput.GenerateStartTag());
+            Assert.Empty(tagHelperOutput.GenerateStartTag().ToString());
             var result = Assert.IsType<DefaultTagHelperContent>(tagHelperOutput.GeneratePreContent());
             Assert.Empty(result.GetContent());
             result = Assert.IsType<DefaultTagHelperContent>(tagHelperOutput.GenerateContent());
             Assert.Empty(result.GetContent());
             result = Assert.IsType<DefaultTagHelperContent>(tagHelperOutput.GeneratePostContent());
             Assert.Empty(result.GetContent());
-            Assert.Empty(tagHelperOutput.GenerateEndTag());
+            Assert.Empty(tagHelperOutput.GenerateEndTag().ToString());
         }
 
         [Theory]
@@ -417,8 +416,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 attributes: new Dictionary<string, string>
                 {
                     { originalName, "btn" },
-                },
-                htmlEncoder: new NullHtmlEncoder());
+                });
 
             // Act
             tagHelperOutput.Attributes[updateName] = "super button";

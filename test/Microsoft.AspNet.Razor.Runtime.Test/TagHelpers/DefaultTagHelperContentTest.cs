@@ -4,6 +4,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNet.HtmlWriter;
+using Microsoft.Framework.WebEncoders;
 #if !DNXCORE50
 using Moq;
 #endif
@@ -327,7 +329,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             tagHelperContent.SetContent(expected);
 
             // Act
-            tagHelperContent.CopyTo(writer);
+            tagHelperContent.WriteTo(writer, new HtmlEncoder());
 
             // Assert
             Assert.Equal(expected, writer.ToString());
@@ -348,7 +350,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             tagHelperContent.Append(text2);
 
             // Act
-            tagHelperContent.CopyTo(writer.Object);
+            tagHelperContent.WriteTo(writer.Object, new HtmlEncoder());
 
             // Assert
             Assert.Equal(expected, writer.Object.ToString());

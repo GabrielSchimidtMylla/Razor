@@ -1,15 +1,19 @@
 ﻿// Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using Microsoft.AspNet.HtmlWriter;
+using Microsoft.Framework.WebEncoders;
 
 namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
 {
     /// <summary>
     /// Abstract class used to buffer content returned by <see cref="ITagHelper"/>s.
     /// </summary>
-    public abstract class TagHelperContent : IEnumerable<string>
+    public abstract class TagHelperContent : IEnumerable<string>, IHtmlContent
     {
         /// <summary>
         /// Gets a value indicating whether the content was modifed.
@@ -74,5 +78,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         {
             return GetEnumerator();
         }
+
+        public abstract void WriteTo(TextWriter writer, IHtmlEncoder encoder);
     }
 }

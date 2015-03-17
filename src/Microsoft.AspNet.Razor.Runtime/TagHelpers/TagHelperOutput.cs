@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using Microsoft.AspNet.HtmlWriter;
 using Microsoft.Framework.Internal;
 using Microsoft.Framework.WebEncoders;
 
@@ -17,14 +18,13 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
     {
         private bool _isTagNameNullOrWhitespace;
         private string _tagName;
-        private readonly IHtmlEncoder _htmlEncoder;
         private readonly DefaultTagHelperContent _preContent;
         private readonly DefaultTagHelperContent _content;
         private readonly DefaultTagHelperContent _postContent;
 
         // Internal for testing
         internal TagHelperOutput(string tagName)
-            : this(tagName, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase), null)
+            : this(tagName, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase))
         {
         }
 
@@ -37,15 +37,13 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// to encode HTML attribute values.</param>
         public TagHelperOutput(
             string tagName,
-            [NotNull] IDictionary<string, string> attributes,
-            [NotNull] IHtmlEncoder htmlEncoder)
+            [NotNull] IDictionary<string, string> attributes)
         {
             TagName = tagName;
             Attributes = new Dictionary<string, string>(attributes, StringComparer.OrdinalIgnoreCase);
             _preContent = new DefaultTagHelperContent();
             _content = new DefaultTagHelperContent();
             _postContent = new DefaultTagHelperContent();
-            _htmlEncoder = htmlEncoder;
         }
 
         /// <summary>
@@ -130,37 +128,15 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// </summary>
         /// <returns><c>string.Empty</c> if <see cref="TagName"/> is <c>null</c> or whitespace. Otherwise, the
         /// <see cref="string"/> representation of the <see cref="TagHelperOutput"/>'s start tag.</returns>
-        public string GenerateStartTag()
+        public IHtmlContent GenerateStartTag()
         {
             // Only render a start tag if the tag name is not whitespace
             if (_isTagNameNullOrWhitespace)
             {
-                return string.Empty;
+                return StringHtmlContent.Empty;
             }
 
-            var sb = new StringBuilder();
-
-            sb.Append('<')
-              .Append(TagName);
-
-            foreach (var attribute in Attributes)
-            {
-                var value = _htmlEncoder.HtmlEncode(attribute.Value);
-                sb.Append(' ')
-                  .Append(attribute.Key)
-                  .Append("=\"")
-                  .Append(value)
-                  .Append('"');
-            }
-
-            if (SelfClosing)
-            {
-                sb.Append(" /");
-            }
-
-            sb.Append('>');
-
-            return sb.ToString();
+            return new StartTagHtmlContent(TagName, Attributes, SelfClosing);
         }
 
         /// <summary>
@@ -169,7 +145,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <returns><c>null</c> if <see cref="TagName"/> is not <c>null</c> or whitespace
         /// and <see cref="SelfClosing"/> is <c>true</c>.
         /// Otherwise, an <see cref="ITextWriterCopyable"/> containing the <see cref="PreContent"/>.</returns>
-        public ITextWriterCopyable GeneratePreContent()
+        public IHtmlContent GeneratePreContent()
         {
             if (!_isTagNameNullOrWhitespace && SelfClosing)
             {
@@ -185,7 +161,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <returns><c>null</c> if <see cref="TagName"/> is not <c>null</c> or whitespace
         /// and <see cref="SelfClosing"/> is <c>true</c>.
         /// Otherwise, an <see cref="ITextWriterCopyable"/> containing the <see cref="Content"/>.</returns>
-        public ITextWriterCopyable GenerateContent()
+        public IHtmlContent GenerateContent()
         {
             if (!_isTagNameNullOrWhitespace && SelfClosing)
             {
@@ -201,7 +177,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <returns><c>null</c> if <see cref="TagName"/> is not <c>null</c> or whitespace
         /// and <see cref="SelfClosing"/> is <c>true</c>.
         /// Otherwise, an <see cref="ITextWriterCopyable"/> containing the <see cref="PostContent"/>.</returns>
-        public ITextWriterCopyable GeneratePostContent()
+        public IHtmlContent GeneratePostContent()
         {
             if (!_isTagNameNullOrWhitespace && SelfClosing)
             {
@@ -216,14 +192,14 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// </summary>
         /// <returns><c>string.Empty</c> if <see cref="TagName"/> is <c>null</c> or whitespace. Otherwise, the
         /// <see cref="string"/> representation of the <see cref="TagHelperOutput"/>'s end tag.</returns>
-        public string GenerateEndTag()
+        public IHtmlContent GenerateEndTag()
         {
             if (SelfClosing || _isTagNameNullOrWhitespace)
             {
-                return string.Empty;
+                return StringHtmlContent.Empty;
             }
 
-            return string.Format(CultureInfo.InvariantCulture, "</{0}>", TagName);
+            return new StringHtmlContent(string.Format(CultureInfo.InvariantCulture, "</{0}>", TagName));
         }
 
         /// <summary>

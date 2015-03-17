@@ -1,16 +1,18 @@
 ﻿// Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Framework.Internal;
+using Microsoft.Framework.WebEncoders;
 
 namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
 {
     /// <summary>
     /// Default concrete <see cref="TagHelperContent"/>.
     /// </summary>
-    public class DefaultTagHelperContent : TagHelperContent, ITextWriterCopyable
+    public class DefaultTagHelperContent : TagHelperContent
     {
         private readonly BufferEntryCollection _buffer;
 
@@ -125,15 +127,6 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         }
 
         /// <inheritdoc />
-        public void CopyTo([NotNull] TextWriter writer)
-        {
-            foreach (var value in _buffer)
-            {
-                writer.Write(value);
-            }
-        }
-
-        /// <inheritdoc />
         public override string ToString()
         {
             return GetContent();
@@ -145,6 +138,14 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             // The enumerator is exposed so that SetContent(TagHelperContent) and Append(TagHelperContent)
             // can use this to iterate through the values of the buffer.
             return _buffer.GetEnumerator();
+        }
+
+        public override void WriteTo(TextWriter writer, IHtmlEncoder encoder)
+        {
+            foreach (var value in _buffer)
+            {
+                writer.Write(value);
+            }
         }
     }
 }
